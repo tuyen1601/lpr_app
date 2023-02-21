@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 sys.path.append("../")
 
-from PyQt5.QtWidgets import QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
@@ -16,6 +16,7 @@ cluster = "mongodb://localhost:27017"
 client = MongoClient(cluster)
 db = client.lpr
 in_collection = db.in_collection
+manager_collection = db.manager_collection
 
 UPLOAD_DIR = "/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/upload"
 
@@ -33,11 +34,18 @@ def uploadFile(image, file_name):
     return imagePath
 
 
-def send2In(filePath, textLPR):
-    dbIn = {"Image Path": filePath, "Licence Plate": textLPR}
+def add2In(idCard, filePath, textLPR, status):
+    dbIn = {"ID": idCard, "Image Path": filePath, "Licence Plate": textLPR, "Status": status}
     in_collection.insert_one(dbIn)
 
     return dbIn
+
+def message_warning():
+    message = QMessageBox()
+    message.setWindowTitle("Message")
+    message.setText("Not Regis")
+    message.setIcon(QMessageBox.Warning)
+    message.exec_()
 
 
 class IN(QMainWindow):
@@ -47,10 +55,11 @@ class IN(QMainWindow):
 
         self.lprecognizer = LPRecognizer()
 
-        self.btnChooseFile.clicked.connect(self.loadImage)
+        self.btnChooseFile.clicked.connect(self.vehicleIN)
 
-    def loadImage(self):
+    def vehicleIN(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Open Image File", r"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/image_test", "Image files (*.jpg *.jpeg *.png)")
+        idCard = os.path.basename(file_name.split(".")[0])
         self.labelImage.setScaledContents(True)
         self.labelImage.setPixmap(QPixmap(file_name))
 
@@ -61,7 +70,14 @@ class IN(QMainWindow):
             text = list_txt[scores.index(max(scores))]
         else:
             text = ''
+        timeIN = datetime.now().date()
+        print(timeIN.year)
         self.txtLPR.setText(text)
 
-        dbIn = send2In(filePath, text)
+        document = manager_collection.find_one({"ID": idCard})
+        if document is None:
+            message_warning()
+        else:
+            status = "In"
+            dbIn = add2In(idCard ,filePath, text, status)
         
