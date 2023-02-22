@@ -3,6 +3,7 @@ import sys
 import pytz
 import os
 from datetime import datetime
+from PIL import ImageQt, Image
 sys.path.append("../")
 
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
@@ -34,16 +35,23 @@ def uploadFile(image, file_name):
     return imagePath
 
 
-def add2In(idCard, filePath, textLPR, status):
-    dbIn = {"ID": idCard, "Image Path": filePath, "Licence Plate": textLPR, "Status": status}
+def add2In(idCard, filePath, textLPR, timeIN, status):
+    dbIn = {"ID": idCard, "Image Path": filePath, "Licence Plate": textLPR, "Time IN": timeIN, "Status": status}
     in_collection.insert_one(dbIn)
 
     return dbIn
 
-def message_warning():
+def messageCheckRegis():
     message = QMessageBox()
     message.setWindowTitle("Message")
-    message.setText("Not Regis")
+    message.setText("Xe Chua Duoc Dang Ky")
+    message.setIcon(QMessageBox.Warning)
+    message.exec_()
+
+def messageCheckIn():
+    message = QMessageBox()
+    message.setWindowTitle("Message")
+    message.setText("Bien So Khong Hop Le")
     message.setIcon(QMessageBox.Warning)
     message.exec_()
 
@@ -65,19 +73,29 @@ class IN(QMainWindow):
 
         image = cv2.imread(file_name)
         filePath = uploadFile(image, file_name)
-        list_txt, scores = self.lprecognizer.infer(image)
+        list_txt, scores, plate = self.lprecognizer.infer(image)
         if scores:
             text = list_txt[scores.index(max(scores))]
         else:
             text = ''
+
+        self.labelLP.setScaledContents(True)
+        self.labelLP.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+
         timeIN = datetime.now().date()
-        print(timeIN.year)
         self.txtLPR.setText(text)
 
         document = manager_collection.find_one({"ID": idCard})
         if document is None:
-            message_warning()
+            messageCheckRegis()
         else:
-            status = "In"
-            dbIn = add2In(idCard ,filePath, text, status)
+            for key, value in document.items():
+                if key == "Licence Plate":
+                    if value == text:
+                        status = "In"
+                        dbIn = add2In(idCard ,filePath, text, str(timeIN), status)
+                    else:
+                        messageCheckIn()
+                        break
+
         
