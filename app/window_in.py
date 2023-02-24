@@ -48,10 +48,11 @@ def messageCheckRegis():
     message.setIcon(QMessageBox.Warning)
     message.exec_()
 
-def messageCheckIn():
+def messageCheckIn(trueLP):
     message = QMessageBox()
     message.setWindowTitle("Message")
-    message.setText("Bien So Khong Hop Le")
+    # message.setText("Bien So Khong Hop Le")
+    message.setText("Bien So Dang Ky: " + trueLP)
     message.setIcon(QMessageBox.Warning)
     message.exec_()
 
@@ -66,26 +67,47 @@ class IN(QMainWindow):
         self.btnChooseFile.clicked.connect(self.vehicleIN)
 
     def vehicleIN(self):
-        file_name, _ = QFileDialog.getOpenFileName(self, "Open Image File", r"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/image_test", "Image files (*.jpg *.jpeg *.png)")
-        idCard = os.path.basename(file_name.split(".")[0])
-        self.labelImage.setScaledContents(True)
-        self.labelImage.setPixmap(QPixmap(file_name))
+        #read image 
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open Image File", r"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/image_test", "Image files (*.jpg *.jpeg *.png)")
 
-        image = cv2.imread(file_name)
-        filePath = uploadFile(image, file_name)
+        #licence plate recognizer
+        image = cv2.imread(fileName)
         list_txt, scores, plate = self.lprecognizer.infer(image)
         if scores:
             text = list_txt[scores.index(max(scores))]
         else:
             text = ''
 
-        self.labelLP.setScaledContents(True)
-        self.labelLP.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+        #upload image
+        _fileName = fileName.split(".")[0] + "_plate." + fileName.split(".")[1]
+        filePath = uploadFile(image, fileName)
+        _filePath = uploadFile(plate, _fileName)
 
+        #set lane vehicle
         timeIN = datetime.now().date()
-        self.txtLPR.setText(text)
+        idCard = os.path.basename(fileName.split(".")[0])
+        nameVehicle = idCard.split("_")[0]
+        if nameVehicle == "car":
+            #car image
+            self.lblImgCar.setScaledContents(True)
+            self.lblImgCar.setPixmap(QPixmap(fileName))
+            #plate image
+            self.lblPlateCar.setScaledContents(True)
+            self.lblPlateCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+            #text LP
+            self.txtLPCar.setText(text)
+        else:
+            #motobike image
+            self.lblImgMotobike.setScaledContents(True)
+            self.lblImgMotobike.setPixmap(QPixmap(fileName))
+            #plate image
+            self.lblPlateMotobike.setScaledContents(True)
+            self.lblPlateMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+            #text LP
+            self.txtLPMotobike.setText(text)
 
         document = manager_collection.find_one({"ID": idCard})
+        self.lw.clear()
         if document is None:
             messageCheckRegis()
         else:
@@ -95,7 +117,9 @@ class IN(QMainWindow):
                         status = "In"
                         dbIn = add2In(idCard ,filePath, text, str(timeIN), status)
                     else:
-                        messageCheckIn()
+                        messageCheckIn(value)
                         break
+            self.lw.addItem("ID: " + idCard)
+            self.lw.addItem("Time IN: " + str(timeIN))
 
         

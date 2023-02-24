@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>880</width>
-    <height>729</height>
+    <width>1612</width>
+    <height>796</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="btnBackOUT">
     <property name="geometry">
      <rect>
-      <x>780</x>
-      <y>630</y>
+      <x>1520</x>
+      <y>680</y>
       <width>80</width>
       <height>23</height>
      </rect>
@@ -30,8 +30,8 @@
    <widget class="QPushButton" name="btnChooseFile">
     <property name="geometry">
      <rect>
-      <x>780</x>
-      <y>590</y>
+      <x>1520</x>
+      <y>640</y>
       <width>80</width>
       <height>23</height>
      </rect>
@@ -40,13 +40,13 @@
      <string>choose file</string>
     </property>
    </widget>
-   <widget class="QGroupBox" name="gbIn">
+   <widget class="QGroupBox" name="gbMotobike">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>0</y>
-      <width>421</width>
-      <height>461</height>
+      <x>810</x>
+      <y>10</y>
+      <width>791</width>
+      <height>591</height>
      </rect>
     </property>
     <property name="layoutDirection">
@@ -56,96 +56,154 @@
      <bool>false</bool>
     </property>
     <property name="title">
-     <string>IN</string>
+     <string>XE MAY</string>
     </property>
-    <widget class="QLabel" name="lblPlateIn">
+    <widget class="QGroupBox" name="gbInMotobike">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>350</y>
-       <width>141</width>
-       <height>71</height>
+       <x>10</x>
+       <y>20</y>
+       <width>381</width>
+       <height>311</height>
       </rect>
      </property>
-     <property name="text">
-      <string/>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
      </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>VAO</string>
+     </property>
+     <widget class="QLabel" name="lblImgInMotobike">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>360</width>
+        <height>270</height>
+       </rect>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>1280</width>
+        <height>720</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
     </widget>
-    <widget class="QLabel" name="lblImgIn">
+    <widget class="QGroupBox" name="gbOutMotobike">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>30</y>
-       <width>360</width>
-       <height>270</height>
+       <x>400</x>
+       <y>20</y>
+       <width>381</width>
+       <height>311</height>
       </rect>
      </property>
-     <property name="maximumSize">
-      <size>
-       <width>1280</width>
-       <height>720</height>
-      </size>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
      </property>
-     <property name="text">
-      <string/>
+     <property name="autoFillBackground">
+      <bool>false</bool>
      </property>
+     <property name="title">
+      <string>RA</string>
+     </property>
+     <widget class="QLabel" name="lblImgOutMotobike">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>360</width>
+        <height>270</height>
+       </rect>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>1280</width>
+        <height>720</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
     </widget>
-   </widget>
-   <widget class="QGroupBox" name="gbOut">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>0</y>
-      <width>421</width>
-      <height>461</height>
-     </rect>
-    </property>
-    <property name="layoutDirection">
-     <enum>Qt::LeftToRight</enum>
-    </property>
-    <property name="autoFillBackground">
-     <bool>false</bool>
-    </property>
-    <property name="title">
-     <string>OUT</string>
-    </property>
-    <widget class="QLabel" name="lblPlateOut">
+    <widget class="QGroupBox" name="gbPlateMotobike">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>350</y>
-       <width>141</width>
-       <height>71</height>
+       <x>10</x>
+       <y>340</y>
+       <width>381</width>
+       <height>161</height>
       </rect>
      </property>
-     <property name="text">
-      <string/>
+     <property name="title">
+      <string>BIEN SO</string>
      </property>
+     <widget class="QLabel" name="lblPlateOutMotobike">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>70</y>
+        <width>141</width>
+        <height>71</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lblPlateInMotobike">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>70</y>
+        <width>141</width>
+        <height>71</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>71</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>VAO</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>30</y>
+        <width>71</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>RA</string>
+      </property>
+     </widget>
     </widget>
-    <widget class="QLabel" name="lblImgOut">
+    <widget class="QLabel" name="txtLPMotobike">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>30</y>
-       <width>360</width>
-       <height>270</height>
-      </rect>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>1280</width>
-       <height>720</height>
-      </size>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-    <widget class="QLabel" name="txtLPR">
-     <property name="geometry">
-      <rect>
-       <x>220</x>
-       <y>360</y>
+       <x>510</x>
+       <y>400</y>
        <width>171</width>
        <height>61</height>
       </rect>
@@ -160,13 +218,211 @@
      </property>
     </widget>
    </widget>
+   <widget class="QGroupBox" name="gbCar">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>791</width>
+      <height>591</height>
+     </rect>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>O TO</string>
+    </property>
+    <widget class="QGroupBox" name="gbInCar">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>381</width>
+       <height>311</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>VAO</string>
+     </property>
+     <widget class="QLabel" name="lblImgInCar">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>360</width>
+        <height>270</height>
+       </rect>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>1280</width>
+        <height>720</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="gbOutCar">
+     <property name="geometry">
+      <rect>
+       <x>400</x>
+       <y>20</y>
+       <width>381</width>
+       <height>311</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>RA</string>
+     </property>
+     <widget class="QLabel" name="lblImgOutCar">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>360</width>
+        <height>270</height>
+       </rect>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>1280</width>
+        <height>720</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="gbPlateCar">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>340</y>
+       <width>381</width>
+       <height>161</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>BIEN SO</string>
+     </property>
+     <widget class="QLabel" name="lblPlateInCar">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>70</y>
+        <width>141</width>
+        <height>71</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_3">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>71</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>VAO</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>30</y>
+        <width>71</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>RA</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lblPlateOutCar">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>70</y>
+        <width>141</width>
+        <height>71</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QLabel" name="txtLPCar">
+     <property name="geometry">
+      <rect>
+       <x>500</x>
+       <y>400</y>
+       <width>171</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>20</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QListWidget" name="lw">
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>610</y>
+      <width>381</width>
+      <height>141</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <item>
+     <property name="text">
+      <string>THONG TIN THE</string>
+     </property>
+    </item>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>880</width>
+     <width>1612</width>
      <height>20</height>
     </rect>
    </property>

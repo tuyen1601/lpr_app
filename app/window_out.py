@@ -7,7 +7,7 @@ sys.path.append("../")
 
 from lpr.lprecg import LPRecognizer
 
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QListWidget
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
@@ -20,7 +20,7 @@ manager_collection = db.manager_collection
 out_collection = db.out_collection
 
 def add2Out(idCard, textLPR, timeOUT, status):
-    dbOut = {"ID": idCard, "Licence Plate": textLPR, "Time IN": timeOUT, "Status": status}
+    dbOut = {"ID": idCard, "Licence Plate": textLPR, "Time OUT": timeOUT, "Status": status}
     out_collection.insert_one(dbOut)
 
     return dbOut
@@ -40,7 +40,6 @@ def messageCheckCard():
     message.exec_()
 
 
-
 class OUT(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -51,11 +50,10 @@ class OUT(QMainWindow):
         self.btnChooseFile.clicked.connect(self.vehicleOUT)
     
     def vehicleOUT(self):
+        #read image
         file_name, _ = QFileDialog.getOpenFileName(self, "Open Image File", r"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/image_test", "Image files (*.jpg *.jpeg *.png)")
-        idCard = os.path.basename(file_name.split(".")[0])
-        self.lblImgOut.setScaledContents(True)
-        self.lblImgOut.setPixmap(QPixmap(file_name))
-
+        
+        #licence plate recognizer
         image = cv2.imread(file_name)
         list_txt, scores, plate = self.lprecognizer.infer(image)
         if scores:
@@ -63,21 +61,54 @@ class OUT(QMainWindow):
         else:
             text = ''
 
-        self.lblPlateOut.setScaledContents(True)
-        self.lblPlateOut.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
-
+        #set lane vehicle
         timeOUT = datetime.now().date()
-        self.txtLPR.setText(text)
+        idCard = os.path.basename(file_name.split(".")[0])
+        nameVehicle = idCard.split("_")[0]
+        if nameVehicle == "car":
+            self.lblImgInCar.clear()
+            self.lblPlateInCar.clear()
+            #car image out
+            self.lblImgOutCar.setScaledContents(True)
+            self.lblImgOutCar.setPixmap(QPixmap(file_name))
+            #plate image out
+            self.lblPlateOutCar.setScaledContents(True)
+            self.lblPlateOutCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+            #text LP
+            self.txtLPCar.setText(text)
+        else:
+            self.lblImgInMotobike.clear()
+            self.lblPlateInMotobike.clear()
+            #motobike image out
+            self.lblImgOutMotobike.setScaledContents(True)
+            self.lblImgOutMotobike.setPixmap(QPixmap(file_name))
+            #plate image out
+            self.lblPlateOutMotobike.setScaledContents(True)
+            self.lblPlateOutMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+            #text LP
+            self.txtLPMotobike.setText(text)
 
         document = in_collection.find_one({"ID": idCard})
+        self.lw.clear()
         if document is None:
-            self.lblImgIn.clear()
             messageCheckCard()
         else:
             for key, value in document.items():
                 if key == "Image Path":
-                    self.lblImgIn.setScaledContents(True)
-                    self.lblImgIn.setPixmap(QPixmap(value))
+                    if nameVehicle == "car":
+                        self.lblImgInCar.setScaledContents(True)
+                        self.lblImgInCar.setPixmap(QPixmap(value))
+                        self.lblPlateInCar.setScaledContents(True)
+                        self.lblPlateInCar.setPixmap(QPixmap(value.split(".")[0] + "_plate." + value.split(".")[1]))
+                    else:
+                        self.lblImgInMotobike.setScaledContents(True)
+                        self.lblImgInMotobike.setPixmap(QPixmap(value))
+                        self.lblPlateInMotobike.setScaledContents(True)
+                        self.lblPlateInMotobike.setPixmap(QPixmap(value.split(".")[0] + "_plate." + value.split(".")[1]))
+                if key == "Time IN":
+                    self.lw.addItem("ID: " + idCard)
+                    self.lw.addItem("Time IN: " + value)
+                    self.lw.addItem("Time OUT: " + str(timeOUT))
                 if key == "Licence Plate":
                     if value == text:
                         status = "Out"
@@ -85,4 +116,3 @@ class OUT(QMainWindow):
                     else:
                         messageCheckOut()
                         break
-
