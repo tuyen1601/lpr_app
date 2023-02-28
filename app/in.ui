@@ -201,9 +201,9 @@
    <widget class="QListWidget" name="lw">
     <property name="geometry">
      <rect>
-      <x>580</x>
+      <x>550</x>
       <y>750</y>
-      <width>351</width>
+      <width>401</width>
       <height>121</height>
      </rect>
     </property>

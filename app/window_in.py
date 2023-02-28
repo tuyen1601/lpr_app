@@ -13,7 +13,7 @@ from PyQt5 import uic
 from lpr.lprecg import LPRecognizer
 
 from pymongo import MongoClient
-cluster = "mongodb://localhost:27017"
+cluster = "mongodb://10.37.239.135:27017"
 client = MongoClient(cluster)
 db = client.lpr
 in_collection = db.in_collection
@@ -35,11 +35,12 @@ def uploadFile(image, file_name):
     return imagePath
 
 
-def add2In(idCard, filePath, textLPR, timeIN, status):
-    dbIn = {"ID": idCard, "Image Path": filePath, "Licence Plate": textLPR, "Time IN": timeIN, "Status": status}
+def add2In(idCard, filePath, cardType, textLPR, timeIN, status):
+    dbIn = {"ID": idCard, "Image Path": filePath, "Loại vé": cardType, "Biển số": textLPR, "Thời gian vào": timeIN, "Status": status}
     in_collection.insert_one(dbIn)
 
     return dbIn
+
 
 def messageCheckRegis():
     message = QMessageBox()
@@ -84,7 +85,7 @@ class IN(QMainWindow):
         _filePath = uploadFile(plate, _fileName)
 
         #set lane vehicle
-        timeIN = datetime.now().date()
+        timeIN = datetime.now(pytz.timezone('Asia/Ho_Chi_Minh')).strftime('%Hh%Mp - %d/%m/%Y')
         idCard = os.path.basename(fileName.split(".")[0])
         nameVehicle = idCard.split("_")[0]
         if nameVehicle == "car":
@@ -111,15 +112,32 @@ class IN(QMainWindow):
         if document is None:
             messageCheckRegis()
         else:
-            for key, value in document.items():
-                if key == "Licence Plate":
-                    if value == text:
-                        status = "In"
-                        dbIn = add2In(idCard ,filePath, text, str(timeIN), status)
-                    else:
-                        messageCheckIn(value)
-                        break
+            valuesList = list(document.values())
             self.lw.addItem("ID: " + idCard)
-            self.lw.addItem("Time IN: " + str(timeIN))
+            self.lw.addItem("Thời gian vào: " + str(timeIN))
+            if len(valuesList) > 3:
+                self.lw.addItem("Loại vé: " + valuesList[4])
+                if valuesList[2] == text:
+                    status = "In"
+                    dbIn = add2In(idCard, filePath, valuesList[4], text, str(timeIN), status)
+                else:
+                    messageCheckIn()
+            else:
+                self.lw.addItem("Loại vé: " + valuesList[2])
+                status = "In"
+                dbIn = add2In(idCard, filePath, valuesList[2], text, str(timeIN), status)
+                    
+
+            # for key, value in document.items():
+            #     if key == "Loại vé":
+            #         self.lw.addItem("Loại vé: " + value)
+            #     if key == "Biển số":
+            #         if value == text:
+            #             status = "In"
+            #             dbIn = add2In(idCard ,filePath, document.values()[3], text, str(timeIN), status)
+            #         else:
+            #             messageCheckIn(value)
+            #             break
+            
 
         

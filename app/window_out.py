@@ -1,6 +1,7 @@
 import cv2
 import sys
 import os
+import pytz
 from datetime import datetime
 from PIL import ImageQt, Image
 sys.path.append("../")
@@ -12,15 +13,15 @@ from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
 from pymongo import MongoClient
-cluster = "mongodb://localhost:27017"
+cluster = "mongodb://10.37.239.135:27017"
 client = MongoClient(cluster)
 db = client.lpr
 in_collection = db.in_collection
 manager_collection = db.manager_collection
 out_collection = db.out_collection
 
-def add2Out(idCard, textLPR, timeOUT, status):
-    dbOut = {"ID": idCard, "Licence Plate": textLPR, "Time OUT": timeOUT, "Status": status}
+def add2Out(idCard, textLPR, timeIN, timeOUT, status):
+    dbOut = {"ID": idCard, "Biển số": textLPR, "Thời gian vào": timeIN, "Thời gian ra": timeOUT, "Status": status}
     out_collection.insert_one(dbOut)
 
     return dbOut
@@ -62,7 +63,7 @@ class OUT(QMainWindow):
             text = ''
 
         #set lane vehicle
-        timeOUT = datetime.now().date()
+        timeOUT = datetime.now(pytz.timezone('Asia/Ho_Chi_Minh')).strftime('%Hh%Mp - %d/%m/%Y')
         idCard = os.path.basename(file_name.split(".")[0])
         nameVehicle = idCard.split("_")[0]
         if nameVehicle == "car":
@@ -93,26 +94,63 @@ class OUT(QMainWindow):
         if document is None:
             messageCheckCard()
         else:
-            for key, value in document.items():
-                if key == "Image Path":
-                    if nameVehicle == "car":
-                        self.lblImgInCar.setScaledContents(True)
-                        self.lblImgInCar.setPixmap(QPixmap(value))
-                        self.lblPlateInCar.setScaledContents(True)
-                        self.lblPlateInCar.setPixmap(QPixmap(value.split(".")[0] + "_plate." + value.split(".")[1]))
-                    else:
-                        self.lblImgInMotobike.setScaledContents(True)
-                        self.lblImgInMotobike.setPixmap(QPixmap(value))
-                        self.lblPlateInMotobike.setScaledContents(True)
-                        self.lblPlateInMotobike.setPixmap(QPixmap(value.split(".")[0] + "_plate." + value.split(".")[1]))
-                if key == "Time IN":
-                    self.lw.addItem("ID: " + idCard)
-                    self.lw.addItem("Time IN: " + value)
-                    self.lw.addItem("Time OUT: " + str(timeOUT))
-                if key == "Licence Plate":
-                    if value == text:
-                        status = "Out"
-                        # dbOut = add2Out(idCard, text, str(timeOUT), status)
-                    else:
-                        messageCheckOut()
-                        break
+            valuesList = list(document.values())
+            timeIN = valuesList[5]
+            if nameVehicle == "car":
+                self.lblImgInCar.setScaledContents(True)
+                self.lblImgInCar.setPixmap(QPixmap(valuesList[2]))
+                self.lblPlateInCar.setScaledContents(True)
+                self.lblPlateInCar.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
+            else:
+                self.lblImgInMotobike.setScaledContents(True)
+                self.lblImgInMotobike.setPixmap(QPixmap(valuesList[2]))
+                self.lblPlateInMotobike.setScaledContents(True)
+                self.lblPlateInMotobike.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
+            self.lw.addItem("ID: " + idCard)
+            self.lw.addItem("Thời gian vào: " + timeIN)
+            self.lw.addItem("Thời gian ra: " + str(timeOUT))
+            self.lw.addItem("Loại vé: " + valuesList[3])
+            if valuesList[3] == "Vé tháng":
+                self.lw.addItem("Số tiền: 0 VND")
+            else:
+                pass
+            if valuesList[4] == text:
+                status = "Out"
+                dbOut = add2Out(idCard, text, valuesList[5], str(timeOUT), status)
+                # in_collection.delete_one({"Biển số": text})
+            else:
+                messageCheckOut()
+
+
+
+            # for key, value in document.items():
+            #     if key == "Image Path":
+            #         if nameVehicle == "car":
+            #             self.lblImgInCar.setScaledContents(True)
+            #             self.lblImgInCar.setPixmap(QPixmap(value))
+            #             self.lblPlateInCar.setScaledContents(True)
+            #             self.lblPlateInCar.setPixmap(QPixmap(value.split(".")[0] + "_plate." + value.split(".")[1]))
+            #         else:
+            #             self.lblImgInMotobike.setScaledContents(True)
+            #             self.lblImgInMotobike.setPixmap(QPixmap(value))
+            #             self.lblPlateInMotobike.setScaledContents(True)
+            #             self.lblPlateInMotobike.setPixmap(QPixmap(value.split(".")[0] + "_plate." + value.split(".")[1]))
+            #     if key == "Thời gian vào":
+            #         self.lw.addItem("ID: " + idCard)
+            #         self.lw.addItem("Thời gian vào: " + value)
+            #         self.lw.addItem("Thời gian ra: " + str(timeOUT))
+            #     if key == "Loại vé":
+            #         if value == "Vé tháng":
+            #             self.lw.addItem("Loại vé: Vé tháng")
+            #             self.lw.addItem("Số tiền: 0 VND")
+            #         else:
+            #             self.lw.addItem("Loại vé: Vé ngày")
+            #             self.lw.addItem("Số tiền: 5000 VND")
+            #     if key == "Biển số":
+            #         if value == text:
+            #             status = "Out"
+            #             dbOut = add2Out(idCard, text, valuesList[5], str(timeOUT), status)
+            #             in_collection.delete_one({"Biển số": text})
+            #         else:
+            #             messageCheckOut()
+            #             break
