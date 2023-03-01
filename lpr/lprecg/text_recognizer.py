@@ -19,7 +19,7 @@ from ppocr.utils.logging import get_logger
 logger = get_logger()
 
 class TextRecognizer(object):
-    def __init__(self, model_dir='/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/lpr/model/ocr', use_onnx=False, precision=None) -> None:
+    def __init__(self, model_dir='/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/lpr/model/ocr_official', use_onnx=False, precision=None) -> None:
         self.rec_image_shape = [3,48,320]
         self.rec_batch_num = 6
         self.rec_algorithm = "SVTR_LCNet"
@@ -29,7 +29,7 @@ class TextRecognizer(object):
         self.precision = precision
         postprocess_params = {
         'name': 'CTCLabelDecode',
-        "character_dict_path":"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/lpr/model/dict.txt",
+        "character_dict_path":"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/lpr/model/en_dict.txt",
         "use_space_char": True
     }
         self.postprocess_op = build_post_process(postprocess_params)

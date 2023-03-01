@@ -92,27 +92,39 @@ class LPRecognizer(object):
             x1 = int(plate[2])
             y1 = int(plate[3])
             lp_score = plate[4]
-            # classID = int(plate[-1])
             if x0 > 5:
                 iplate = image[abs(y0):abs(y1+3), abs(x0-5):abs(x1+5)]
             iplate = image[abs(y0):abs(y1), abs(x0):abs(x1)]
-            
-            norm_plate = self.__norm_plate(iplate)
 
             res = []
             text_pred = ''
 
-            if norm_plate is None:
+            if iplate is None:
                 continue
-            text = self.textRecognizer.recognizer(norm_plate)
-            res.append(text[0][0])
+            h, w, _ = iplate.shape
+            if w / h > 2.5:
+                text = self.textRecognizer.recognizer(iplate)
+                res.append(text[0][0])
+            else:
+                iplate_1 = iplate[0:int(h / 2), 0:w]
+                iplate_2 = iplate[int(h / 2):h, 0:w]
+                text_1 = self.textRecognizer.recognizer(iplate_1)
+                text_2 = self.textRecognizer.recognizer(iplate_2)
+                text = str(text_1[0][0] + text_2[0][0])
+                res.append(text)
+            
+            # norm_plate = self.__norm_plate(iplate)
+
+            # if norm_plate is None:
+            #     continue
+            # text = self.textRecognizer.recognizer(norm_plate)
+            # res.append(text[0][0])
             _text = list(map(lambda text: str(text), res))
             _text_pred = ''.join(_text)
             text_pred = ''.join(char for char in _text_pred if char.isalnum() or char.isalpha()).upper()
             txt = self.__rule(text_pred)
             list_txt.append(txt)
-            # scores.append(text[0][1])
             scores.append(lp_score)
 
-        return list_txt, scores
+        return list_txt, scores, iplate
 

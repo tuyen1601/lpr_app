@@ -92,10 +92,10 @@
      <widget class="QLabel" name="lblPlateCar">
       <property name="geometry">
        <rect>
-        <x>90</x>
+        <x>100</x>
         <y>40</y>
-        <width>171</width>
-        <height>81</height>
+        <width>141</width>
+        <height>71</height>
        </rect>
       </property>
       <property name="text">
@@ -168,10 +168,10 @@
      <widget class="QLabel" name="lblPlateMotobike">
       <property name="geometry">
        <rect>
-        <x>90</x>
+        <x>110</x>
         <y>40</y>
-        <width>171</width>
-        <height>81</height>
+        <width>141</width>
+        <height>71</height>
        </rect>
       </property>
       <property name="text">

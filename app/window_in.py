@@ -26,8 +26,7 @@ def uploadFile(image, file_name):
     if not os.path.exists(UPLOAD_DIR):
         os.mkdir(UPLOAD_DIR)
 
-    timeTerm: str = datetime.now(pytz.timezone('Asia/Ho_Chi_Minh')) \
-        .strftime('%Y%m%d%H%M%S')
+    timeTerm: str = datetime.now().strftime('%Y%m%d%H%M%S')
     imageName: str = f'{timeTerm}-{os.path.basename(file_name)}'
     imagePath: str = os.path.join(UPLOAD_DIR, imageName)
     cv2.imwrite(imagePath, image)
@@ -85,7 +84,8 @@ class IN(QMainWindow):
         _filePath = uploadFile(plate, _fileName)
 
         #set lane vehicle
-        timeIN = datetime.now(pytz.timezone('Asia/Ho_Chi_Minh')).strftime('%Hh%Mp - %d/%m/%Y')
+        timeIN = datetime.now()
+        strTimeIN = timeIN.strftime('%Hh%Mp - %d/%m/%Y')
         idCard = os.path.basename(fileName.split(".")[0])
         nameVehicle = idCard.split("_")[0]
         if nameVehicle == "car":
@@ -94,7 +94,8 @@ class IN(QMainWindow):
             self.lblImgCar.setPixmap(QPixmap(fileName))
             #plate image
             self.lblPlateCar.setScaledContents(True)
-            self.lblPlateCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+            # self.lblPlateCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+            self.lblPlateMotobike.setPixmap(QPixmap(_filePath))
             #text LP
             self.txtLPCar.setText(text)
         else:
@@ -103,7 +104,8 @@ class IN(QMainWindow):
             self.lblImgMotobike.setPixmap(QPixmap(fileName))
             #plate image
             self.lblPlateMotobike.setScaledContents(True)
-            self.lblPlateMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+            # self.lblPlateMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+            self.lblPlateMotobike.setPixmap(QPixmap(_filePath))
             #text LP
             self.txtLPMotobike.setText(text)
 
@@ -114,30 +116,15 @@ class IN(QMainWindow):
         else:
             valuesList = list(document.values())
             self.lw.addItem("ID: " + idCard)
-            self.lw.addItem("Thời gian vào: " + str(timeIN))
+            self.lw.addItem("Thời gian vào: " + strTimeIN)
             if len(valuesList) > 3:
                 self.lw.addItem("Loại vé: " + valuesList[4])
                 if valuesList[2] == text:
                     status = "In"
-                    dbIn = add2In(idCard, filePath, valuesList[4], text, str(timeIN), status)
+                    dbIn = add2In(idCard, filePath, valuesList[4], text, timeIN, status)
                 else:
                     messageCheckIn()
             else:
                 self.lw.addItem("Loại vé: " + valuesList[2])
                 status = "In"
-                dbIn = add2In(idCard, filePath, valuesList[2], text, str(timeIN), status)
-                    
-
-            # for key, value in document.items():
-            #     if key == "Loại vé":
-            #         self.lw.addItem("Loại vé: " + value)
-            #     if key == "Biển số":
-            #         if value == text:
-            #             status = "In"
-            #             dbIn = add2In(idCard ,filePath, document.values()[3], text, str(timeIN), status)
-            #         else:
-            #             messageCheckIn(value)
-            #             break
-            
-
-        
+                # dbIn = add2In(idCard, filePath, valuesList[2], text, timeIN, status)
