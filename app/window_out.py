@@ -1,7 +1,6 @@
 import cv2
 import sys
 import os
-import pytz
 from datetime import datetime, date
 from PIL import ImageQt, Image
 sys.path.append("../")
@@ -123,7 +122,10 @@ class OUT(QMainWindow):
                 self.lw.addItem("Số tiền: 0 VND")
             else:
                 day = calculateDateTime(timeIN, timeOUT)
-                money = 5000*day
+                if valuesList[3] == "MOTOBIKE":
+                    money = 5000 * day
+                else:
+                    money == 20000 * day
                 if day == 0:
                     self.lw.addItem("Số tiền: 5000 VND")
                 else:

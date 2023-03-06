@@ -1,6 +1,5 @@
 import cv2
 import sys
-import pytz
 import os
 from datetime import datetime
 from PIL import ImageQt, Image
@@ -33,13 +32,19 @@ def uploadFile(image, file_name):
 
     return imagePath
 
-
 def add2In(idCard, filePath, cardType, textLPR, timeIN, status):
     dbIn = {"ID": idCard, "Image Path": filePath, "Loại vé": cardType, "Biển số": textLPR, "Thời gian vào": timeIN, "Status": status}
     in_collection.insert_one(dbIn)
 
     return dbIn
 
+def checkDate(strDateRegis, strDateExpired, timeIN):
+    objDateRegis = datetime.strptime(strDateRegis, "%d %m %Y")
+    objDateExpired = datetime.strptime(strDateExpired, "%d %m %Y")
+    if timeIN >= objDateRegis and timeIN <= objDateExpired:
+        return True
+    else:
+        return False
 
 def messageCheckRegis():
     message = QMessageBox()
@@ -53,6 +58,13 @@ def messageCheckIn(trueLP):
     message.setWindowTitle("Message")
     # message.setText("Bien So Khong Hop Le")
     message.setText("Bien So Dang Ky: " + trueLP)
+    message.setIcon(QMessageBox.Warning)
+    message.exec_()
+
+def messageCheckDate():
+    message = QMessageBox()
+    message.setWindowTitle("Message")
+    message.setText("The het han")
     message.setIcon(QMessageBox.Warning)
     message.exec_()
 
@@ -95,7 +107,7 @@ class IN(QMainWindow):
             #plate image
             self.lblPlateCar.setScaledContents(True)
             # self.lblPlateCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
-            self.lblPlateMotobike.setPixmap(QPixmap(_filePath))
+            self.lblPlateCar.setPixmap(QPixmap(_filePath))
             #text LP
             self.txtLPCar.setText(text)
         else:
@@ -115,13 +127,15 @@ class IN(QMainWindow):
             messageCheckRegis()
         else:
             valuesList = list(document.values())
+            if not checkDate(valuesList[5], valuesList[6], timeIN):
+                messageCheckDate()
             self.lw.addItem("ID: " + idCard)
             self.lw.addItem("Thời gian vào: " + strTimeIN)
             if len(valuesList) > 3:
                 self.lw.addItem("Loại vé: " + valuesList[4])
                 if valuesList[2] == text:
                     status = "In"
-                    dbIn = add2In(idCard, filePath, valuesList[4], text, timeIN, status)
+                    # dbIn = add2In(idCard, filePath, valuesList[4], text, timeIN, status)
                 else:
                     messageCheckIn()
             else:
