@@ -23,14 +23,14 @@
    <widget class="QPushButton" name="btnChooseFile">
     <property name="geometry">
      <rect>
-      <x>1420</x>
-      <y>760</y>
+      <x>1320</x>
+      <y>790</y>
       <width>80</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
-     <string>choose file</string>
+     <string>Choose file</string>
     </property>
    </widget>
    <widget class="QPushButton" name="btnBackIN">

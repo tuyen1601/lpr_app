@@ -83,62 +83,64 @@ class IN(QMainWindow):
         fileName, _ = QFileDialog.getOpenFileName(self, "Open Image File", r"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/image_test", "Image files (*.jpg *.jpeg *.png)")
 
         #licence plate recognizer
-        image = cv2.imread(fileName)
-        list_txt, scores, plate = self.lprecognizer.infer(image)
-        if scores:
-            text = list_txt[scores.index(max(scores))]
-        else:
-            text = ''
-
-        #upload image
-        _fileName = fileName.split(".")[0] + "_plate." + fileName.split(".")[1]
-        filePath = uploadFile(image, fileName)
-        _filePath = uploadFile(plate, _fileName)
-
-        #set lane vehicle
-        timeIN = datetime.now()
-        strTimeIN = timeIN.strftime('%Hh%Mp - %d/%m/%Y')
-        idCard = os.path.basename(fileName.split(".")[0])
-        nameVehicle = idCard.split("_")[0]
-        if nameVehicle == "car":
-            #car image
-            self.lblImgCar.setScaledContents(True)
-            self.lblImgCar.setPixmap(QPixmap(fileName))
-            #plate image
-            self.lblPlateCar.setScaledContents(True)
-            # self.lblPlateCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
-            self.lblPlateCar.setPixmap(QPixmap(_filePath))
-            #text LP
-            self.txtLPCar.setText(text)
-        else:
-            #motobike image
-            self.lblImgMotobike.setScaledContents(True)
-            self.lblImgMotobike.setPixmap(QPixmap(fileName))
-            #plate image
-            self.lblPlateMotobike.setScaledContents(True)
-            # self.lblPlateMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
-            self.lblPlateMotobike.setPixmap(QPixmap(_filePath))
-            #text LP
-            self.txtLPMotobike.setText(text)
-
-        document = manager_collection.find_one({"ID": idCard})
-        self.lw.clear()
-        if document is None:
-            messageCheckRegis()
-        else:
-            valuesList = list(document.values())
-            if not checkDate(valuesList[5], valuesList[6], timeIN):
-                messageCheckDate()
-            self.lw.addItem("ID: " + idCard)
-            self.lw.addItem("Thời gian vào: " + strTimeIN)
-            if len(valuesList) > 3:
-                self.lw.addItem("Loại vé: " + valuesList[4])
-                if valuesList[2] == text:
-                    status = "In"
-                    # dbIn = add2In(idCard, filePath, valuesList[4], text, timeIN, status)
-                else:
-                    messageCheckIn()
+        if fileName:
+            image = cv2.imread(fileName)
+            list_txt, scores, plate = self.lprecognizer.infer(image)
+            if scores:
+                text = list_txt[scores.index(max(scores))]
             else:
-                self.lw.addItem("Loại vé: " + valuesList[2])
-                status = "In"
-                # dbIn = add2In(idCard, filePath, valuesList[2], text, timeIN, status)
+                text = ''
+
+            #upload image
+            _fileName = fileName.split(".")[0] + "_plate." + fileName.split(".")[1]
+            filePath = uploadFile(image, fileName)
+            _filePath = uploadFile(plate, _fileName)
+
+            #set lane vehicle
+            nameVehicle = os.path.dirname(fileName).split("/")[-1]
+
+            timeIN = datetime.now()
+            strTimeIN = timeIN.strftime('%Hh%Mp - %d/%m/%Y')
+            idCard = os.path.basename(fileName.split(".")[0])
+            if nameVehicle == "car":
+                #car image
+                self.lblImgCar.setScaledContents(True)
+                self.lblImgCar.setPixmap(QPixmap(fileName))
+                #plate image
+                self.lblPlateCar.setScaledContents(True)
+                # self.lblPlateCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+                self.lblPlateCar.setPixmap(QPixmap(_filePath))
+                #text LP
+                self.txtLPCar.setText(text)
+            else:
+                #motobike image
+                self.lblImgMotobike.setScaledContents(True)
+                self.lblImgMotobike.setPixmap(QPixmap(fileName))
+                #plate image
+                self.lblPlateMotobike.setScaledContents(True)
+                # self.lblPlateMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+                self.lblPlateMotobike.setPixmap(QPixmap(_filePath))
+                #text LP
+                self.txtLPMotobike.setText(text)
+
+            document = manager_collection.find_one({"ID": idCard})
+            self.lw.clear()
+            if document is None:
+                messageCheckRegis()
+            else:
+                valuesList = list(document.values())
+                if not checkDate(valuesList[5], valuesList[6], timeIN):
+                    messageCheckDate()
+                self.lw.addItem("ID: " + idCard)
+                self.lw.addItem("Thời gian vào: " + strTimeIN)
+                if len(valuesList) > 3:
+                    self.lw.addItem("Loại vé: " + valuesList[4])
+                    if valuesList[2] == text:
+                        status = "In"
+                        # dbIn = add2In(idCard, filePath, valuesList[4], text, timeIN, status)
+                    else:
+                        messageCheckIn()
+                else:
+                    self.lw.addItem("Loại vé: " + valuesList[2])
+                    status = "In"
+                    # dbIn = add2In(idCard, filePath, valuesList[2], text, timeIN, status)
