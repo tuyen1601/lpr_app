@@ -11,17 +11,57 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string></string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QPushButton {
+  background-color: #0d6efd;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #0d6efd;
+  padding: 5px 15px;
+  margin-top: 10px;
+  outline: 0px;
+}
+QPushButton:hover,
+QPushButton:focus {
+  background-color: #0b5ed7;
+  border: 3px solid #9ac3fe;
+}
+QLabel {
+  color: #464d55;
+  font-weight: 600;
+}
+QLabel#heading {
+  color: #0f1925;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+QLabel#subheading {
+  color: #0f1925;
+  font-size: 12px;
+  font-weight: normal;
+  margin-bottom: 10px;
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="btnIN">
     <property name="geometry">
      <rect>
       <x>80</x>
-      <y>150</y>
+      <y>140</y>
       <width>80</width>
-      <height>23</height>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Serif</family>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
     <property name="text">
      <string>IN</string>
@@ -31,10 +71,17 @@
     <property name="geometry">
      <rect>
       <x>250</x>
-      <y>150</y>
+      <y>140</y>
       <width>80</width>
-      <height>23</height>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Serif</family>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
     <property name="text">
      <string>OUT</string>
@@ -43,16 +90,18 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>80</x>
+      <x>60</x>
       <y>30</y>
-      <width>251</width>
+      <width>301</width>
       <height>61</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <family>Bitstream Charter</family>
+      <family>Serif</family>
       <pointsize>20</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">

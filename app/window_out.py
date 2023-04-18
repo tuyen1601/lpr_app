@@ -1,13 +1,13 @@
 import cv2
 import sys
 import os
-from datetime import datetime, date
+from datetime import datetime, date, time
 from PIL import ImageQt, Image
 sys.path.append("../")
 
 from lpr.lprecg import LPRecognizer
 
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QListWidget
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
@@ -18,32 +18,110 @@ db = client.lpr
 in_collection = db.in_collection
 manager_collection = db.manager_collection
 out_collection = db.out_collection
+price_collection = db.price
 
-def add2Out(idCard, textLPR, timeIN, timeOUT, status):
-    dbOut = {"ID": idCard, "Biển số": textLPR, "Thời gian vào": timeIN, "Thời gian ra": timeOUT, "Status": status}
+priceCar = price_collection.find_one({"Loại phương tiện": "Ô tô", "Trạng thái": "Sử dụng"})
+priceMotobike = price_collection.find_one({"Loại phương tiện": "Xe máy", "Trạng thái": "Sử dụng"})
+
+def add2Out(idCard, textLPR, timeIN, cardType, timeOUT, status):
+    dbOut = {"Mã thẻ": idCard, "Biển số": textLPR, "Loại vé": cardType, "Thời gian vào": timeIN, "Thời gian ra": timeOUT, "Status": status}
     out_collection.insert_one(dbOut)
 
-    return dbOut
+# def calculateDateTime(timeIN, timeOUT):
+#     dayIN = date(timeIN.year, timeIN.month, timeIN.day)
+#     dayOUT = date(timeOUT.year, timeOUT.month, timeOUT.day)
 
-def messageCheckOut():
-    message = QMessageBox()
-    message.setWindowTitle("Message")
-    message.setText("Bien So Khong Hop Le")
-    message.setIcon(QMessageBox.Warning)
-    message.exec_()
+#     return (dayOUT - dayIN).days
 
-def messageCheckCard():
-    message = QMessageBox()
-    message.setWindowTitle("Message")
-    message.setText("The Khong Hop Le")
-    message.setIcon(QMessageBox.Warning)
-    message.exec_()
+def checkBetweenTime(beginTime, endTime, checkTime):
+    if beginTime < endTime:
+        return checkTime >= beginTime and checkTime <= endTime
+    else:
+        return checkTime >= beginTime or checkTime <= endTime
 
-def calculateDateTime(timeIN, timeOUT):
-    dayIN = date(timeIN.year, timeIN.month, timeIN.day)
-    dayOUT = date(timeOUT.year, timeOUT.month, timeOUT.day)
+def calculateMoney(price, timeIN, timeOUT):
+    if timeOUT.day - timeIN.day > 0:
+        priceDay = (int(price["Giá ngày"]) + int(price["Giá đêm"]) + int(price["Giá phụ thu"])) * (timeOUT.day - timeIN.day - 1)
 
-    return (dayOUT - dayIN).days
+        #calculate extra price
+        if int(price["Bắt đầu phụ thu"]) == int(price["Kết thúc phụ thu"]):
+            priceExtraIN = 0
+            priceExtraOUT = 0
+        elif int(price["Bắt đầu phụ thu"]) > int(price["Kết thúc phụ thu"]):
+            priceExtraIN = int(price["Giá phụ thu"])
+            if checkBetweenTime(time(int(price["Bắt đầu phụ thu"])), time(23), time(timeOUT.hour)):
+                priceExtraOUT = int(price["Giá phụ thu"])
+            else:
+                priceExtraOUT = 0
+        else:
+            if checkBetweenTime(time(0), time(int(price["Kết thúc phụ thu"])), time(timeIN.hour)):
+                priceExtraIN = int(price["Giá phụ thu"])
+            else:
+                priceExtraIN = 0
+            if checkBetweenTime(time(int(price["Bắt đầu phụ thu"])), time(0), time(timeOUT.hour)):
+                priceExtraOUT = int(price["Giá phụ thu"])
+            else:
+                priceExtraOUT = 0
+
+        #calculate price day IN
+        if checkBetweenTime(time(int(price["Bắt đầu đêm"])), time(int(price["Kết thúc đêm"])), time(timeIN.hour)):
+            if checkBetweenTime(time(int(price["Bắt đầu đêm"])), time(23), time(timeIN.hour)):
+                priceDayIN = int(price["Giá đêm"])
+            else:
+                priceDayIN = int(price["Giá đêm"]) + int(price["Giá ngày"])
+        else:
+            priceDayIN = int(price["Giá đêm"]) + int(price["Giá ngày"])
+
+        #calculate price day OUT
+        if checkBetweenTime(time(int(price["Bắt đầu đêm"])), time(int(price["Kết thúc đêm"])), time(timeOUT.hour)):
+            if checkBetweenTime(time(0), time(int(price["Kết thúc đêm"])), time(timeOUT.hour)):
+                priceDayOUT = 0
+            else:
+                priceDayOUT = int(price["Giá đêm"]) + int(price["Giá ngày"])
+        else:
+            priceDayOUT = int(price["Giá ngày"])
+        
+        priceSum = priceDay + priceExtraIN + priceExtraOUT + priceDayIN + priceDayOUT
+    
+    else:
+        #calculate extra price
+        if int(price["Bắt đầu phụ thu"]) == int(price["Kết thúc phụ thu"]):   
+            priceExtraIN = 0
+            priceExtraOUT = 0
+        elif int(price["Bắt đầu phụ thu"]) > int(price["Kết thúc phụ thu"]):   
+            if checkBetweenTime(time(0), time(int(price["Kết thúc phụ thu"])), time(timeIN.hour)):
+                priceExtraIN = int(price["Giá phụ thu"])
+            else:
+                priceExtraIN = 0
+            if checkBetweenTime(time(int(price["Bắt đầu phụ thu"])), time(23), time(timeOUT.hour)):
+                priceExtraOUT = int(price["Giá phụ thu"])
+            else:
+                priceExtraOUT = 0
+        else:
+            if timeOUT.hour < int(price["Bắt đầu phụ thu"]) or timeIN.hour > int(price["Kết thúc phụ thu"]):
+                priceExtraIN = 0
+                priceExtraOUT = 0
+            else:
+                priceExtraIN = int(price("Giá phụ thu"))
+                priceExtraOUT = 0
+        
+        #calculate price
+        if checkBetweenTime(time(0), time(int(price["Kết thúc đêm"])), time(timeIN.hour)) and checkBetweenTime(time(0), time(int(price["Kết thúc đêm"])), time(timeOUT.hour)):
+            priceDay = int(price["Giá đêm"])
+        elif checkBetweenTime(time(0), time(int(price["Kết thúc đêm"])), time(timeIN.hour)) and checkBetweenTime(time(int(price["Kết thúc đêm"])), time(int(price["Bắt đầu đêm"])), time(timeOUT.hour)):
+            priceDay = int(price["Giá đêm"]) + int(price["Giá ngày"])
+        elif checkBetweenTime(time(0), time(int(price["Kết thúc đêm"])), time(timeIN.hour)) and checkBetweenTime(time(int(price["Bắt đầu đêm"])), time(0), time(timeOUT.hour)):
+            priceDay = int(price["Giá đêm"]) * 2 + int(price["Giá ngày"])
+        elif checkBetweenTime(time(int(price["Kết thúc đêm"])), time(int(price["Bắt đầu đêm"])), time(timeIN.hour)) and checkBetweenTime(time(int(price["Kết thúc đêm"])), time(int(price["Bắt đầu đêm"])), time(timeOUT.hour)):
+            priceDay = int(price["Giá ngày"])
+        elif checkBetweenTime(time(int(price["Kết thúc đêm"])), time(int(price["Bắt đầu đêm"])), time(timeIN.hour)) and checkBetweenTime(time(int(price["Bắt đầu đêm"])), time(0), time(timeOUT.hour)):
+            priceDay = int(price["Giá đêm"]) + int(price["Giá ngày"])
+        else:
+            priceDay = int(price["Giá đêm"])
+        
+        priceSum = priceDay + priceExtraIN + priceExtraOUT
+
+    return priceSum
 
 
 class OUT(QMainWindow):
@@ -57,82 +135,131 @@ class OUT(QMainWindow):
     
     def vehicleOUT(self):
         #read image
-        file_name, _ = QFileDialog.getOpenFileName(self, "Open Image File", r"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/image_test", "Image files (*.jpg *.jpeg *.png)")
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open Image File", r"/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/image_test", "Image files (*.jpg *.jpeg *.png)")
         
         #licence plate recognizer
-        image = cv2.imread(file_name)
-        list_txt, scores, plate = self.lprecognizer.infer(image)
-        if scores:
-            text = list_txt[scores.index(max(scores))]
-        else:
-            text = ''
+        if fileName:
+            image = cv2.imread(fileName)
+            list_txt, scores, plate = self.lprecognizer.infer(image)
+            if scores:
+                text = list_txt[scores.index(max(scores))]
+            else:
+                text = ''
 
-        #set lane vehicle
-        timeOUT = datetime.now()
-        strTimeOUT = timeOUT.strftime('%Hh%Mp - %d/%m/%Y')
+            #set lane vehicle
+            timeOUT = datetime.now()
+            strTimeOUT = timeOUT.strftime('%Hh%Mp')
+            strDayOUT = timeOUT.strftime('%d/%m/%Y')
 
-        idCard = os.path.basename(file_name.split(".")[0])
-        nameVehicle = idCard.split("_")[0]
-        if nameVehicle == "car":
-            self.lblImgInCar.clear()
-            self.lblPlateInCar.clear()
-            #car image out
-            self.lblImgOutCar.setScaledContents(True)
-            self.lblImgOutCar.setPixmap(QPixmap(file_name))
-            #plate image out
-            self.lblPlateOutCar.setScaledContents(True)
-            self.lblPlateOutCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
-            #text LP
-            self.txtLPCar.setText(text)
-        else:
-            self.lblImgInMotobike.clear()
-            self.lblPlateInMotobike.clear()
-            #motobike image out
-            self.lblImgOutMotobike.setScaledContents(True)
-            self.lblImgOutMotobike.setPixmap(QPixmap(file_name))
-            #plate image out
-            self.lblPlateOutMotobike.setScaledContents(True)
-            self.lblPlateOutMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
-            #text LP
-            self.txtLPMotobike.setText(text)
-
-        document = in_collection.find_one({"ID": idCard})
-        self.lw.clear()
-        if document is None:
-            messageCheckCard()
-        else:
-            valuesList = list(document.values())
-            timeIN = valuesList[5]
-            strTimeIN = timeIN.strftime('%Hh%Mp - %d/%m/%Y')
+            idCard = os.path.basename(fileName.split(".")[0])
+            nameVehicle = os.path.dirname(fileName).split("/")[-1]
             if nameVehicle == "car":
-                self.lblImgInCar.setScaledContents(True)
-                self.lblImgInCar.setPixmap(QPixmap(valuesList[2]))
-                self.lblPlateInCar.setScaledContents(True)
-                self.lblPlateInCar.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
+                #car image out
+                self.lblImgOutCar.setScaledContents(True)
+                self.lblImgOutCar.setPixmap(QPixmap(fileName))
+                #plate image out
+                self.lblPlateOutCar.setScaledContents(True)
+                self.lblPlateOutCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+                #information
+                self.lblCarDayOut.setText(strDayOUT)
+                self.lblCarTimeOut.setText(strTimeOUT)
+                self.lblCarPlateOut.setText(text)
             else:
-                self.lblImgInMotobike.setScaledContents(True)
-                self.lblImgInMotobike.setPixmap(QPixmap(valuesList[2]))
-                self.lblPlateInMotobike.setScaledContents(True)
-                self.lblPlateInMotobike.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
-            self.lw.addItem("ID: " + idCard)
-            self.lw.addItem("Thời gian vào: " + strTimeIN)
-            self.lw.addItem("Thời gian ra: " + strTimeOUT)
-            self.lw.addItem("Loại vé: " + valuesList[3])
-            if valuesList[3] == "Vé tháng":
-                self.lw.addItem("Số tiền: 0 VND")
-            else:
-                day = calculateDateTime(timeIN, timeOUT)
-                if valuesList[3] == "MOTOBIKE":
-                    money = 5000 * day
+                #motobike image out
+                self.lblImgOutMotobike.setScaledContents(True)
+                self.lblImgOutMotobike.setPixmap(QPixmap(fileName))
+                #plate image out
+                self.lblPlateOutMotobike.setScaledContents(True)
+                self.lblPlateOutMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
+                #information
+                self.lblMotobikeDayOut.setText(strDayOUT)
+                self.lblMotobikeTimeOut.setText(strTimeOUT)
+                self.lblMotobikePlateOut.setText(text)
+            document = in_collection.find_one({"Mã thẻ": idCard})
+            if document is None:
+                if nameVehicle == "car":
+                    # messageCheckCard()
+                    self.lblCarDayIn.clear()
+                    self.lblCarTimeIn.clear()
+                    self.lblCarPlateIn.clear()
+                    self.lblCarPrice.clear()
+                    self.lblImgInCar.clear()
+                    self.lblCarMessage.setText("THẺ KHÔNG HỢP LỆ")
+                    self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
                 else:
-                    money == 20000 * day
-                if day == 0:
-                    self.lw.addItem("Số tiền: 5000 VND")
-                else:
-                    self.lw.addItem("Số tiền: " + str(money) + "VND")
-            if valuesList[4] == text:
-                status = "Out"
-                # dbOut = add2Out(idCard, text, valuesList[5], strTimeOUT, status)
-                # in_collection.delete_one({"Biển số": text})
+                    # messageCheckCard()
+                    self.lblMotobikeDayIn.clear()
+                    self.lblMotobikeTimeIn.clear()
+                    self.lblMotobikePlateIn.clear()
+                    self.lblMotobikePrice.clear()
+                    self.lblImgInMotobike.clear()
+                    self.lblMotobikeMessage.setText("THẺ KHÔNG HỢP LỆ")
+                    self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
             else:
-                messageCheckOut()
+                valuesList = list(document.values())
+                timeIN = valuesList[6]
+                strDayIN = timeIN.strftime('%d/%m/%Y')
+                strTimeIN = timeIN.strftime('%Hh%Mp')
+                if nameVehicle == "car":
+                    self.lblImgInCar.setScaledContents(True)
+                    self.lblImgInCar.setPixmap(QPixmap(valuesList[1]))
+                    self.lblCarPlateIn.setText(valuesList[3])
+                    self.lblCarPlateOut.setText(text)
+                    self.lblCarTimeIn.setText(strTimeIN)
+                    self.lblCarDayIn.setText(strDayIN)
+                    if valuesList[4] == "Vé tháng":
+                        self.lblCarPrice.setText("0 VND")
+                    else:
+                        # day = calculateDateTime(timeIN, timeOUT)
+                        priceCar = price_collection.find_one({"Loại phương tiện": "Ô tô", "Trạng thái": "Sử dụng"})
+                        if priceCar:
+                            priceSum = calculateMoney(priceCar, timeIN, timeOUT)
+                            self.lblCarPrice.setText(str(priceSum) + " VND")
+                    # self.lblPlateInCar.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
+                    if valuesList[3] == text:
+                        status = "Out"
+                        add2Out(idCard, text, valuesList[4], valuesList[5], strTimeOUT, status)
+                        # in_collection.delete_one({"Biển số": text})
+                        self.lblCarMessage.setText("HẸN GẶP LẠI")
+                        self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: green}')
+                    else:
+                        # messageCheckOut()
+                        self.lblCarDayIn.clear()
+                        self.lblCarTimeIn.clear()
+                        self.lblCarPlateIn.clear()
+                        self.lblCarPrice.clear()
+                        self.lblImgInCar.clear()
+                        self.lblCarMessage.setText("BIỂN SỐ KHÔNG HỢP LỆ")
+                        self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                else:
+                    self.lblImgInMotobike.setScaledContents(True)
+                    self.lblImgInMotobike.setPixmap(QPixmap(valuesList[1]))
+                    self.lblMotobikePlateIn.setText(valuesList[3])
+                    self.lblMotobikePlateOut.setText(text)
+                    self.lblMotobikeTimeIn.setText(strTimeIN)
+                    self.lblMotobikeDayIn.setText(strDayIN)
+                    if valuesList[4] == "Vé tháng":
+                        self.lblMotobikePrice.setText("0 VND")
+                    else:
+                        # day = calculateDateTime(timeIN, timeOUT)
+                        priceMotobike = price_collection.find_one({"Loại phương tiện": "Xe máy", "Trạng thái": "Sử dụng"})
+                        if priceMotobike:
+                            priceSum = calculateMoney(priceMotobike, timeIN, timeOUT)
+                            self.lblMotobikePrice.setText(str(priceSum) + " VND")
+                    # self.lblPlateInMotobike.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
+                    if valuesList[3] == text:
+                        status = "Out"
+                        add2Out(idCard, text, valuesList[4], valuesList[5], strTimeOUT, status)
+                        # in_collection.delete_one({"Biển số": text})
+                        self.lblMotobikeMessage.setText("HẸN GẶP LẠI")
+                        self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: green}')
+                    else:
+                        # messageCheckOut()
+                        self.lblMotobikeDayIn.clear()
+                        self.lblMotobikeTimeIn.clear()
+                        self.lblMotobikePlateIn.clear()
+                        self.lblMotobikePrice.clear()
+                        self.lblImgInMotobike.clear()
+                        self.lblMotobikeMessage.setText("BIỂN SỐ KHÔNG HỢP LỆ")
+                        self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+

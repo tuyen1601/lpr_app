@@ -5,7 +5,7 @@ from datetime import datetime
 from PIL import ImageQt, Image
 sys.path.append("../")
 
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QFileDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
@@ -32,11 +32,9 @@ def uploadFile(image, file_name):
 
     return imagePath
 
-def add2In(idCard, filePath, cardType, textLPR, timeIN, status):
-    dbIn = {"ID": idCard, "Image Path": filePath, "Loại vé": cardType, "Biển số": textLPR, "Thời gian vào": timeIN, "Status": status}
+def add2In(filePath, idCard, textLPR, cardType, vehicle, timeIN, status):
+    dbIn = {"Image Path": filePath, "Mã thẻ": idCard, "Biển số": textLPR, "Loại vé": cardType, "Loại xe": vehicle, "Thời gian vào": timeIN, "Status": status}
     in_collection.insert_one(dbIn)
-
-    return dbIn
 
 def checkDate(strDateRegis, strDateExpired, timeIN):
     objDateRegis = datetime.strptime(strDateRegis, "%d %m %Y")
@@ -45,28 +43,6 @@ def checkDate(strDateRegis, strDateExpired, timeIN):
         return True
     else:
         return False
-
-def messageCheckRegis():
-    message = QMessageBox()
-    message.setWindowTitle("Message")
-    message.setText("Xe Chua Duoc Dang Ky")
-    message.setIcon(QMessageBox.Warning)
-    message.exec_()
-
-def messageCheckIn(trueLP):
-    message = QMessageBox()
-    message.setWindowTitle("Message")
-    # message.setText("Bien So Khong Hop Le")
-    message.setText("Bien So Dang Ky: " + trueLP)
-    message.setIcon(QMessageBox.Warning)
-    message.exec_()
-
-def messageCheckDate():
-    message = QMessageBox()
-    message.setWindowTitle("Message")
-    message.setText("The het han")
-    message.setIcon(QMessageBox.Warning)
-    message.exec_()
 
 
 class IN(QMainWindow):
@@ -100,7 +76,9 @@ class IN(QMainWindow):
             nameVehicle = os.path.dirname(fileName).split("/")[-1]
 
             timeIN = datetime.now()
-            strTimeIN = timeIN.strftime('%Hh%Mp - %d/%m/%Y')
+            # strTimeIN = timeIN.strftime('%Hh%Mp - %d/%m/%Y')
+            strTimeIN = timeIN.strftime('%Hh%Mp')
+            strDayIN = timeIN.strftime('%d/%m/%Y')
             idCard = os.path.basename(fileName.split(".")[0])
             if nameVehicle == "car":
                 #car image
@@ -110,8 +88,11 @@ class IN(QMainWindow):
                 self.lblPlateCar.setScaledContents(True)
                 # self.lblPlateCar.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
                 self.lblPlateCar.setPixmap(QPixmap(_filePath))
-                #text LP
-                self.txtLPCar.setText(text)
+                #information
+                self.lblCarDayIn.setText(strDayIN)
+                self.lblCarTimeIn.setText(strTimeIN)
+                self.lblCarPlate.setText("\n" + text)
+                self.lblCarID.setText(idCard)
             else:
                 #motobike image
                 self.lblImgMotobike.setScaledContents(True)
@@ -120,27 +101,62 @@ class IN(QMainWindow):
                 self.lblPlateMotobike.setScaledContents(True)
                 # self.lblPlateMotobike.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(Image.fromarray(plate, mode="RGB"))))
                 self.lblPlateMotobike.setPixmap(QPixmap(_filePath))
-                #text LP
-                self.txtLPMotobike.setText(text)
+                #information
+                self.lblMotobikeDayIn.setText(strDayIN)
+                self.lblMotobikeTimeIn.setText(strTimeIN)
+                self.lblMotobikePlate.setText("\n" + text)
+                self.lblMotobikeID.setText(idCard)
 
-            document = manager_collection.find_one({"ID": idCard})
-            self.lw.clear()
+            document = manager_collection.find_one({"Mã thẻ": idCard})
             if document is None:
-                messageCheckRegis()
+                # messageCheckRegis()
+                if nameVehicle == "car":
+                    self.lblCarMessage.setText("THẺ CHƯA ĐƯỢC ĐĂNG KÝ")
+                    self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                else:
+                    self.lblMotobikeMessage.setText("THẺ CHƯA ĐƯỢC ĐĂNG KÝ")
+                    self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
             else:
                 valuesList = list(document.values())
-                if not checkDate(valuesList[5], valuesList[6], timeIN):
-                    messageCheckDate()
-                self.lw.addItem("ID: " + idCard)
-                self.lw.addItem("Thời gian vào: " + strTimeIN)
-                if len(valuesList) > 3:
-                    self.lw.addItem("Loại vé: " + valuesList[4])
-                    if valuesList[2] == text:
-                        status = "In"
-                        # dbIn = add2In(idCard, filePath, valuesList[4], text, timeIN, status)
+                if nameVehicle == "car":
+                    if len(valuesList) > 3:
+                        if not checkDate(valuesList[6], valuesList[7], timeIN):
+                            # messageCheckDate()
+                            self.lblCarMessage.setText("THẺ HẾT HẠN")
+                            self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                        elif valuesList[4] == text:
+                            status = "In"
+                            add2In(filePath, idCard, text, valuesList[11], "Ô tô", timeIN, status)
+                            self.lblCarMessage.setText("XIN MỜI VÀO")
+                            self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: green}')
+                        else:
+                            # messageCheckIn()
+                            self.lblCarMessage.setText("BIỂN SỐ KHÔNG HỢP LỆ")
+                            add2In(filePath, idCard, text, valuesList[11], "Ô tô", timeIN, status)
+                            self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
                     else:
-                        messageCheckIn()
+                        status = "In"
+                        add2In(filePath, idCard, text, "Vé lượt", "Ô tô", timeIN, status)
+                        self.lblCarMessage.setText("XIN MỜI VÀO")
+                        self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: orange}')
                 else:
-                    self.lw.addItem("Loại vé: " + valuesList[2])
-                    status = "In"
-                    # dbIn = add2In(idCard, filePath, valuesList[2], text, timeIN, status)
+                    if len(valuesList) > 3:
+                        if not checkDate(valuesList[6], valuesList[7], timeIN):
+                            # messageCheckDate()
+                            self.lblMotobikeMessage.setText("THẺ HẾT HẠN")
+                            self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                        elif valuesList[4] == text:
+                            status = "In"
+                            add2In(filePath, idCard, text, valuesList[11], "Xe máy", timeIN, status)
+                            self.lblMotobikeMessage.setText("XIN MỜI VÀO")
+                            self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: green}')
+                        else:
+                            # messageCheckIn()
+                            self.lblMotobikeMessage.setText("BIỂN SỐ KHÔNG HỢP LỆ")
+                            add2In(filePath, idCard, text, valuesList[11], "Xe máy", timeIN, status)
+                            self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                    else:
+                        status = "In"
+                        add2In(filePath, idCard, text, "Vé lượt", "Xe máy", timeIN, status)
+                        self.lblMotobikeMessage.setText("XIN MỜI VÀO")
+                        self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: orange}')
