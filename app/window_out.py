@@ -23,8 +23,8 @@ price_collection = db.price
 priceCar = price_collection.find_one({"Loại phương tiện": "Ô tô", "Trạng thái": "Sử dụng"})
 priceMotobike = price_collection.find_one({"Loại phương tiện": "Xe máy", "Trạng thái": "Sử dụng"})
 
-def add2Out(idCard, textLPR, timeIN, cardType, timeOUT, status):
-    dbOut = {"Mã thẻ": idCard, "Biển số": textLPR, "Loại vé": cardType, "Thời gian vào": timeIN, "Thời gian ra": timeOUT, "Status": status}
+def add2Out(idCard, textLPR, cardType, vehicle, timeIN, timeOUT, price, status):
+    dbOut = {"Mã thẻ": idCard, "Biển số": textLPR, "Loại vé": cardType, "Loại xe": vehicle, "Thời gian vào": timeIN, "Thời gian ra": timeOUT, "Giá vé": price, "Status": status}
     out_collection.insert_one(dbOut)
 
 # def calculateDateTime(timeIN, timeOUT):
@@ -209,6 +209,7 @@ class OUT(QMainWindow):
                     self.lblCarDayIn.setText(strDayIN)
                     if valuesList[4] == "Vé tháng":
                         self.lblCarPrice.setText("0 VND")
+                        priceSum = 0
                     else:
                         # day = calculateDateTime(timeIN, timeOUT)
                         priceCar = price_collection.find_one({"Loại phương tiện": "Ô tô", "Trạng thái": "Sử dụng"})
@@ -218,7 +219,7 @@ class OUT(QMainWindow):
                     # self.lblPlateInCar.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
                     if valuesList[3] == text:
                         status = "Out"
-                        add2Out(idCard, text, valuesList[4], valuesList[5], strTimeOUT, status)
+                        add2Out(idCard, text, valuesList[4], valuesList[5], timeIN, timeOUT, priceSum, status)
                         # in_collection.delete_one({"Biển số": text})
                         self.lblCarMessage.setText("HẸN GẶP LẠI")
                         self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: green}')
@@ -240,6 +241,7 @@ class OUT(QMainWindow):
                     self.lblMotobikeDayIn.setText(strDayIN)
                     if valuesList[4] == "Vé tháng":
                         self.lblMotobikePrice.setText("0 VND")
+                        priceSum = 0
                     else:
                         # day = calculateDateTime(timeIN, timeOUT)
                         priceMotobike = price_collection.find_one({"Loại phương tiện": "Xe máy", "Trạng thái": "Sử dụng"})
@@ -249,7 +251,7 @@ class OUT(QMainWindow):
                     # self.lblPlateInMotobike.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
                     if valuesList[3] == text:
                         status = "Out"
-                        add2Out(idCard, text, valuesList[4], valuesList[5], strTimeOUT, status)
+                        add2Out(idCard, text, valuesList[4], valuesList[5], timeIN, timeOUT, priceSum, status)
                         # in_collection.delete_one({"Biển số": text})
                         self.lblMotobikeMessage.setText("HẸN GẶP LẠI")
                         self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: green}')
