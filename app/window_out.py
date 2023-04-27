@@ -12,13 +12,14 @@ from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
 from pymongo import MongoClient
-cluster = "mongodb://10.37.239.135:27017"
+cluster = "mongodb+srv://tuyennt:0711@lpr.3u3tc8j.mongodb.net/test"
 client = MongoClient(cluster)
 db = client.lpr
 in_collection = db.in_collection
 manager_collection = db.manager_collection
 out_collection = db.out_collection
 price_collection = db.price
+card_collection = db.card
 
 priceCar = price_collection.find_one({"Loại phương tiện": "Ô tô", "Trạng thái": "Sử dụng"})
 priceMotobike = price_collection.find_one({"Loại phương tiện": "Xe máy", "Trạng thái": "Sử dụng"})
@@ -216,11 +217,12 @@ class OUT(QMainWindow):
                         if priceCar:
                             priceSum = calculateMoney(priceCar, timeIN, timeOUT)
                             self.lblCarPrice.setText(str(priceSum) + " VND")
+                        card_collection.find_one_and_update({"Mã thẻ": idCard}, {"$set": {"Biển số": "", "Trạng thái": "Chưa sử dụng"}})
                     # self.lblPlateInCar.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
                     if valuesList[3] == text:
                         status = "Out"
                         add2Out(idCard, text, valuesList[4], valuesList[5], timeIN, timeOUT, priceSum, status)
-                        # in_collection.delete_one({"Biển số": text})
+                        in_collection.delete_one({"Biển số": text})
                         self.lblCarMessage.setText("HẸN GẶP LẠI")
                         self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: green}')
                     else:
@@ -248,11 +250,12 @@ class OUT(QMainWindow):
                         if priceMotobike:
                             priceSum = calculateMoney(priceMotobike, timeIN, timeOUT)
                             self.lblMotobikePrice.setText(str(priceSum) + " VND")
+                        card_collection.find_one_and_update({"Mã thẻ": idCard}, {"$set": {"Biển số": "", "Trạng thái": "Chưa sử dụng"}})
                     # self.lblPlateInMotobike.setPixmap(QPixmap(valuesList[2].split(".")[0] + "_plate." + valuesList[2].split(".")[1]))
                     if valuesList[3] == text:
                         status = "Out"
                         add2Out(idCard, text, valuesList[4], valuesList[5], timeIN, timeOUT, priceSum, status)
-                        # in_collection.delete_one({"Biển số": text})
+                        in_collection.delete_one({"Biển số": text})
                         self.lblMotobikeMessage.setText("HẸN GẶP LẠI")
                         self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: green}')
                     else:

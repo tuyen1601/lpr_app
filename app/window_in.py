@@ -12,11 +12,12 @@ from PyQt5 import uic
 from lpr.lprecg import LPRecognizer
 
 from pymongo import MongoClient
-cluster = "mongodb://10.37.239.135:27017"
+cluster = "mongodb+srv://tuyennt:0711@lpr.3u3tc8j.mongodb.net/test"
 client = MongoClient(cluster)
 db = client.lpr
 in_collection = db.in_collection
 manager_collection = db.manager_collection
+card_collection = db.card
 
 UPLOAD_DIR = "/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/upload"
 
@@ -107,56 +108,80 @@ class IN(QMainWindow):
                 self.lblMotobikePlate.setText("\n" + text)
                 self.lblMotobikeID.setText(idCard)
 
-            document = manager_collection.find_one({"Mã thẻ": idCard})
+            document = card_collection.find_one({"Mã thẻ": idCard})
             if document is None:
                 # messageCheckRegis()
                 if nameVehicle == "car":
-                    self.lblCarMessage.setText("THẺ CHƯA ĐƯỢC ĐĂNG KÝ")
+                    self.lblCarMessage.setText("THẺ KHÔNG TỒN TẠI")
                     self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
                 else:
-                    self.lblMotobikeMessage.setText("THẺ CHƯA ĐƯỢC ĐĂNG KÝ")
+                    self.lblMotobikeMessage.setText("THẺ KHÔNG TỒN TẠI")
                     self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
-            else:
-                valuesList = list(document.values())
-                if nameVehicle == "car":
-                    if len(valuesList) > 3:
+            elif document["Loại thẻ"] == "Thẻ tháng":
+                if document["Biển số"] == "":
+                    if nameVehicle == "car":
+                        self.lblCarMessage.setText("THẺ CHƯA ĐƯỢC ĐĂNG KÝ")
+                        self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                    else:
+                        self.lblMotobikeMessage.setText("THẺ CHƯA ĐƯỢC ĐĂNG KÝ")
+                        self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                else:
+                    valuesList = list(manager_collection.find_one({"Mã thẻ": idCard}).values())
+                    if nameVehicle == "car":
                         if not checkDate(valuesList[6], valuesList[7], timeIN):
                             # messageCheckDate()
                             self.lblCarMessage.setText("THẺ HẾT HẠN")
                             self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
                         elif valuesList[4] == text:
-                            status = "In"
-                            add2In(filePath, idCard, text, valuesList[11], "Ô tô", timeIN, status)
-                            self.lblCarMessage.setText("XIN MỜI VÀO")
-                            self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: green}')
+                            if in_collection.find_one({"Mã thẻ": idCard}) is not None:
+                                self.lblCarMessage.setText("THẺ ĐANG ĐƯỢC SỬ DỤNG")
+                                self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                            else:
+                                status = "In"
+                                add2In(filePath, idCard, text, valuesList[11], "Ô tô", timeIN, status)
+                                self.lblCarMessage.setText("XIN MỜI VÀO")
+                                self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: green}')
                         else:
                             # messageCheckIn()
                             self.lblCarMessage.setText("BIỂN SỐ KHÔNG HỢP LỆ")
                             add2In(filePath, idCard, text, valuesList[11], "Ô tô", timeIN, status)
                             self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
                     else:
-                        status = "In"
-                        add2In(filePath, idCard, text, "Vé lượt", "Ô tô", timeIN, status)
-                        self.lblCarMessage.setText("XIN MỜI VÀO")
-                        self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: orange}')
-                else:
-                    if len(valuesList) > 3:
                         if not checkDate(valuesList[6], valuesList[7], timeIN):
                             # messageCheckDate()
                             self.lblMotobikeMessage.setText("THẺ HẾT HẠN")
                             self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
                         elif valuesList[4] == text:
-                            status = "In"
-                            add2In(filePath, idCard, text, valuesList[11], "Xe máy", timeIN, status)
-                            self.lblMotobikeMessage.setText("XIN MỜI VÀO")
-                            self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: green}')
+                            if in_collection.find_one({"Mã thẻ": idCard}) is not None:
+                                self.lblMotobikeMessage.setText("THẺ ĐANG ĐƯỢC SỬ DỤNG")
+                                self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                            else:
+                                status = "In"
+                                add2In(filePath, idCard, text, valuesList[11], "Xe máy", timeIN, status)
+                                self.lblMotobikeMessage.setText("XIN MỜI VÀO")
+                                self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: green}')
                         else:
                             # messageCheckIn()
                             self.lblMotobikeMessage.setText("BIỂN SỐ KHÔNG HỢP LỆ")
                             add2In(filePath, idCard, text, valuesList[11], "Xe máy", timeIN, status)
                             self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+            else:
+                if document["Biển số"] != "":
+                    if nameVehicle == "car":
+                        self.lblCarMessage.setText("THẺ ĐANG ĐƯỢC SỬ DỤNG")
+                        self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                    else:
+                        self.lblMotobikeMessage.setText("THẺ ĐANG ĐƯỢC SỬ DỤNG")
+                        self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: red}')
+                else:
+                    if nameVehicle == "car":
+                        status = "In"
+                        add2In(filePath, idCard, text, "Vé lượt", "Ô tô", timeIN, status)
+                        self.lblCarMessage.setText("XIN MỜI VÀO")
+                        self.lblCarMessage.setStyleSheet('QLabel {color: white; background-color: orange}')
                     else:
                         status = "In"
                         add2In(filePath, idCard, text, "Vé lượt", "Xe máy", timeIN, status)
                         self.lblMotobikeMessage.setText("XIN MỜI VÀO")
                         self.lblMotobikeMessage.setStyleSheet('QLabel {color: white; background-color: orange}')
+                    card_collection.find_one_and_update({"Mã thẻ": idCard}, {"$set": {"Biển số": text, "Trạng thái": "Đã sử dụng"}})
