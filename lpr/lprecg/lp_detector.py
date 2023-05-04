@@ -4,7 +4,7 @@ import onnxruntime
 from lpr.lprecg.func import *
 
 class LPDetector(object):
-    def __init__(self, model='/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/lpr/model/detect.onnx') -> None:
+    def __init__(self, model='../lpr/model/detect.onnx') -> None:
         self.providers = ['CPUExecutionProvider']
         self.session = onnxruntime.InferenceSession(model, providers=self.providers)
     

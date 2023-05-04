@@ -19,7 +19,7 @@ in_collection = db.in_collection
 manager_collection = db.manager_collection
 card_collection = db.card
 
-UPLOAD_DIR = "/mnt/c/Users/tuyen/Desktop/Project/Do_an/LPR_App/upload"
+UPLOAD_DIR = "../upload"
 
 
 def uploadFile(image, file_name):
