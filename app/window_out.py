@@ -7,7 +7,7 @@ sys.path.append("../")
 
 from lpr.lprecg import LPRecognizer
 
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QFileDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
